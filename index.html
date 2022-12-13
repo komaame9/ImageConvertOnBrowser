@@ -1,0 +1,104 @@
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html; charset=utf-8">
+	<title>Image Format Converter on browser</title>
+	<script>
+		function dropHandler(ev) {
+			console.log('File(s) dropped');
+
+			// Prevent default behavior (Prevent file from being opened)
+			ev.preventDefault();
+
+			if (ev.dataTransfer.items) {
+				// Use DataTransferItemList interface to access the file(s)
+				[...ev.dataTransfer.items].forEach((item, i) => {
+					// If dropped items aren't files, reject them
+					if (item.kind === 'file') {
+						const file = item.getAsFile();
+						console.log(`… file[${i}].name = ${file.name}`);
+						if (file.type.match('^image/')) {
+							console.log('image found');
+							const reader = new FileReader();
+
+							// readAsDataURLの完了時処理
+							reader.addEventListener("load", () => {
+								//const img = document.querySelector('img');
+								const img = document.createElement('img');
+								img.src = reader.result;
+								// imgの表示が終わったら画像を変換してダウンロードする
+								img.onload = () => {
+									var canvas = document.createElement('canvas');
+									canvas.width = img.width;
+									canvas.height = img.height;
+									console.log(canvas);
+									canvas.getContext('2d').drawImage(img, 0, 0);
+									const dlElem = document.createElement('a');
+									const suffix =".png";
+									const imageFormat = "image/png";
+									const outFilename = file.name.substr(0, file.name.lastIndexOf(".")) + suffix;
+									dlElem.href = canvas.toDataURL(imageFormat);
+									dlElem.download = outFilename;
+									dlElem.click();
+								}
+							}, false);
+
+							// file read
+							reader.readAsDataURL(file);
+						}
+					}
+				});
+			} else {
+				// Use DataTransfer interface to access the file(s)
+				[...ev.dataTransfer.files].forEach((file, i) => {
+					console.log(`… file[${i}].name = ${file.name}`);
+				});
+			}
+			changeDropZoneBG_leave();
+		}
+
+		function changeDropZoneBG_over() {
+			document.getElementById('drop_zone').style.backgroundColor = '#808080';
+		}
+
+		function changeDropZoneBG_leave() {
+			document.getElementById('drop_zone').style.backgroundColor = '#ffffff';
+		}
+
+		function dragOverHandler(ev) {
+			console.log('File(s) in drop zone');
+			changeDropZoneBG_over();
+			// Prevent default behavior (Prevent file from being opened)
+			ev.preventDefault();
+		}
+
+		function dragLeaveHandler(ev) {
+			changeDropZoneBG_leave();
+			ev.preventDefault();
+		}
+
+	</script>
+
+	<style>
+		#drop_zone {
+			border: 5px dashed #808080;
+			border-radius: 10px;
+			margin-left: 5%;
+			width: 90%;
+			height: 90%;
+			background-color: #ffffff;
+			text-align: center;
+			vertical-align: middle;
+		}
+	</style>
+</head>
+
+
+<body>
+	<H1>Image Converter on Browser</H1>
+	<div id="drop_zone" ondrop="dropHandler(event);" ondragover="dragOverHandler(event);" ondragleave="dragLeaveHandler(event);">
+		<p>Drag one or more files to this <i>drop zone</i>.</p>
+		<img src=""/>
+	</div>
+</body>
+
+</html>
